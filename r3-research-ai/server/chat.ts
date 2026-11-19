@@ -1,14 +1,14 @@
 import { buildLocalAnswer, retrieve, rankFAQs, type AnswerResult, type SourceRef } from '../src/lib/retrieval';
 import type { EvidenceKind } from '../src/data/knowledge';
 
-interface Env { ASSETS: Fetcher; GEMINI_API_KEY?:string; GEMINI_MODEL?:string }
+interface Env { GEMINI_API_KEY?:string; GEMINI_MODEL?:string }
 const MAX_QUESTION = 650;
 const counts=new Map<string,{n:number;until:number}>();
 function json(data:unknown,status=200,extra:Record<string,string>={}):Response {
  return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff',...extra}});
 }
 function throttle(request:Request){
- const ip=request.headers.get('cf-connecting-ip')||'local';const now=Date.now();
+ const ip=(request.headers.get('x-vercel-forwarded-for')||request.headers.get('x-forwarded-for')||'local').split(',')[0].trim();const now=Date.now();
  if(counts.size>1500)counts.clear();
  const recent=counts.get(ip);
  if(!recent||now>recent.until){counts.set(ip,{n:1,until:now+60000});return false;}
@@ -50,16 +50,18 @@ async function callGemini(q:string,history:string[],sources:SourceRef[],env:Env,
  }catch{return {...fallback,note:'Kết nối Gemini chưa thành công; đã dùng chế độ tra cứu nội bộ.'};}
  finally{clearTimeout(timer);}
 }
-export default {
- async fetch(request:Request,env:Env):Promise<Response>{
+export async function handle(request:Request):Promise<Response>{
+ const env:Env={GEMINI_API_KEY:process.env.GEMINI_API_KEY,GEMINI_MODEL:process.env.GEMINI_MODEL};
   const url=new URL(request.url);
+  if(url.pathname==='/api/health'&&request.method!=='GET')return json({error:'Method not allowed'},405,{allow:'GET'});
   if(url.pathname==='/api/health')return json({online:true,mode:env.GEMINI_API_KEY?'gemini':'local',model:env.GEMINI_API_KEY?(env.GEMINI_MODEL||'gemini-2.5-flash-lite'):null,knowledgeCount:52});
   if(url.pathname==='/api/chat'){
    if(request.method!=='POST')return json({error:'Method not allowed'},405,{allow:'POST'});
    const origin=request.headers.get('origin');if(origin&&origin!==url.origin)return json({error:'Cross-origin requests are disabled'},403);
    if(throttle(request))return json({error:'Bạn đã gửi quá nhiều câu hỏi. Vui lòng thử lại sau một phút.'},429);
+   if(!request.headers.get('content-type')?.includes('application/json'))return json({error:'Content-Type must be application/json'},415);
    const length=Number(request.headers.get('content-length')||0);if(length>12000)return json({error:'Request too large'},413);
-   let body:any;try{body=await request.json();}catch{return json({error:'Dữ liệu không hợp lệ'},400);}
+   let body:any;try{const raw=await request.text();if(new TextEncoder().encode(raw).length>12000)return json({error:'Request too large'},413);body=JSON.parse(raw);}catch{return json({error:'Dữ liệu không hợp lệ'},400);}
    const q=typeof body?.question==='string'?body.question.trim():'';
    if(q.length<3||q.length>MAX_QUESTION)return json({error:`Câu hỏi cần từ 3 đến ${MAX_QUESTION} ký tự.`},400);
    const history=safeHistory(body.history);
@@ -73,6 +75,5 @@ export default {
    return json(response);
   }
   if(url.pathname.startsWith('/api/'))return json({error:'Not found'},404);
-  return env.ASSETS.fetch(request);
- }
-} satisfies ExportedHandler<Env>;
+  return json({error:'Not found'},404);
+}
