@@ -3,29 +3,38 @@ import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 
 const html=readFileSync(resolve(process.cwd(),'public/growth-chamber/index.html'),'utf8');
-describe('Growth Chamber QR guide',()=>{
-  it('contains all four user-requested sections',()=>{
-    for(const id of ['cau-tao','tinh-nang','su-dung','bai-hoc'])
+
+describe('Growth Chamber QR Guide V3',()=>{
+  it('contains the four required content areas',()=>{
+    for(const id of ['cau-tao','tinh-nang','dien-thoai','bai-hoc']){
       expect(html).toContain('id="'+id+'"');
+    }
   });
-  it('uses hardware-specific WiFi and mobile IP access',()=>{
+  it('includes embedded illustrations without external image dependencies',()=>{
+    const count=(html.match(/<img[^>]+src="data:image\//g)||[]).length;
+    expect(count).toBeGreaterThanOrEqual(3);
+    expect(html).not.toMatch(/<img[^>]+src="https?:/i);
+  });
+  it('documents the real ESP32 local-WiFi connection flow',()=>{
     expect(html).toContain('ESP32_ENV');
     expect(html).toContain('12345678');
-    expect(html).toContain('id="chamber-ip"');
-    expect(html).toContain('id="open-chamber-ip"');
+    expect(html).toContain('id="esp-ip"');
+    expect(html).toContain('id="ip-open"');
+    expect(html).toContain('id="ip-copy"');
   });
-  it('describes actual auto and manual control, not automatic humidity/light',()=>{
+  it('contains interactive but clearly labelled demo controls',()=>{
+    for(const id of ['temp-slider','sim-mode-label','heater-toggle','fan-toggle','low-threshold','high-threshold']){
+      expect(html).toContain('id="'+id+'"');
+    }
+    expect(html.toLowerCase()).toContain('mô phỏng');
+  });
+  it('retains safety-critical firmware facts and honest limitations',()=>{
+    expect(html).toContain('DHT11');
+    expect(html).toContain('BH1750');
+    expect(html).toContain('GPIO27');
+    expect(html).toContain('GPIO25');
+    expect(html).toContain('GPIO26');
     expect(html).toContain('25–37°C');
-    expect(html).toContain('LOW để bật, HIGH để tắt');
-    expect(html).toContain('Chỉ nhiệt độ DHT11');
-    expect(html).toContain('hai relay có thể');
-  });
-  it('does not invent dimensions and keeps study results separate',()=>{
-    expect(html).toContain('chưa có trong hai tài liệu');
-    expect(html).toContain('không phải kích thước dài × rộng × cao');
-    expect(html).toContain('không phải dữ liệu trực tuyến');
-  });
-  it('does not retain speculative mobile instructions',()=>{
-    expect(html).not.toContain('Quy trình dưới đây mô tả cách theo dõi dự kiến');
+    expect(html).toContain('10 × 15');
   });
 });

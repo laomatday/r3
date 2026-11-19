@@ -59,3 +59,11 @@ Nội dung gồm đúng bốn phần theo yêu cầu: **Cấu tạo – Tính n�
 **Bảo mật:** Tài liệu nguồn ghi mật khẩu Wi-Fi mặc định `12345678`. Đây là mật khẩu yếu và được nhắc rõ trên trang QR; cần **đổi mật khẩu và kiểm soát quyền truy cập** trước khi sử dụng công khai tại triển lãm. Website QR không phải ứng dụng điều khiển từ Internet: chức năng mở IP chỉ dẫn đến máy chủ web **cục bộ** của ESP32.
 
 **Dạy học:** Danh mục môn học là đề xuất theo chủ đề của CTGDPT 2018; số bài có thể thay đổi theo bộ SGK.
+
+### Growth Chamber V3 — gần bàn giao (19/11/2026)
+
+- Cập nhật `public/growth-chamber/index.html` sang bản **Growth-Chamber-QR-Mobile-V3.html** có thiết kế mobile-first, typography lớn, ảnh/sơ đồ **nhúng trực tiếp trong file HTML**, không cần fetch ảnh ngoài.
+- Giữ bốn mục chính của trang QR: **Cấu tạo**, **Tính năng**, **Hướng dẫn sử dụng qua điện thoại**, **Ứng dụng CTGDPT 2018**.
+- Hướng dẫn 6 bước có chuyển màn minh họa và mô phỏng Auto/Manual với công tắc, ngưỡng nhiệt. Các màn mô phỏng **không điều khiển thiết bị thật**. Tính năng mở IP cục bộ chỉ dùng sau khi kết nối Wi-Fi của ESP32; không thay thế firmware.
+- Thông tin phần cứng và cơ chế điều khiển lấy từ `hướng dẫn.docx`, số liệu thí nghiệm từ `BC149.02.04.pdf`. Vẫn cần xác minh kích thước buồng và thay ảnh mô phỏng bằng ảnh TFT/giao diện ESP32 thực tế trước khi in QR bản cuối.
+- Kiểm tra bằng `npm run test`; link tĩnh sau triển khai giữ nguyên **`/growth-chamber/index.html`**.
