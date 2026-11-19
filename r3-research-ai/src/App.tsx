@@ -8,7 +8,7 @@ import {
  ChartColumnIncreasing,Network
 } from 'lucide-react';
 import {QA,TOPICS,GALLERY,PRACTICE,QUICK_QUESTIONS,type TopicId,type EvidenceKind} from './data/knowledge';
-import {buildLocalAnswer,rankFAQs,type AnswerResult} from './lib/retrieval';
+import {buildLocalAnswer,type AnswerResult} from './lib/retrieval';
 
 type View = 'home'|'chat'|'library'|'practice';
 type Message = {id:string;role:'user'|'assistant';content:string;result?:AnswerResult};

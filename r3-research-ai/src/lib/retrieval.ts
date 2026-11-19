@@ -37,7 +37,7 @@ export function rankFAQs(question:string,limit=5):{item:QAItem;score:number}[] {
 export function retrieve(question:string,limit=6):SourceRef[] {
  const terms=tokens(question); const cleaned=normalize(question);
  const ordered=chunks.map(ch=>{
-  const t=normalize(ch.text),title=normalize(ch.section);
+  const t=normalize(ch.text);
   const overlap=overlapScore(terms,tokens(ch.text));
   const heading=overlapScore(terms,tokens(ch.section));
   const phrase=cleaned.length>8&&t.includes(cleaned)?3:0;
